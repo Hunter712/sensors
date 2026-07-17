@@ -119,7 +119,7 @@ def calculating_conditions():
 
         if bme280 is not None:
             try:
-                sensors_data["bme680"] = build_sensor_data('bme280', bme280.temperature, bme280.pressure, bme280.humidity)
+                sensors_data["bme280"] = build_sensor_data('bme280', bme280.temperature, bme280.pressure, bme280.humidity)
             except Exception as e:
                 sensors_data["bme280"] = {"error": str(e)}
                 logging.error(f"[BME280 - Ch0] Error: {e}")
@@ -128,7 +128,7 @@ def calculating_conditions():
 
         if bmp280 is not None:
             try:
-                sensors_data["bme680"] = build_sensor_data('bmp280', bmp280.temperature, bmp280.pressure)
+                sensors_data["bmp280"] = build_sensor_data('bmp280', bmp280.temperature, bmp280.pressure)
             except Exception as e:
                 sensors_data["bmp280"] = {"error": str(e)}
                 logging.error(f"[BMP280 - Ch0] Error: {e}")
