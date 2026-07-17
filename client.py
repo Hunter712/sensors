@@ -47,7 +47,6 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
 
     if gas is not None:
         if gas < 12000:
-            data["gas_rating"] = "bad"
             data["gas"] = [round(gas, 2), "bad"]
         elif 12000 <= gas <= 30000:
             data["gas"] = [round(gas, 2), "satisfactory"]
