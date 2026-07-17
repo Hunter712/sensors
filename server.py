@@ -6,6 +6,17 @@ app = FastAPI()
 latest_status = "Waiting for data from sensor..."
 TEMPLATE = pathlib.Path("templates/index.html").read_text(encoding="utf-8")
 
+def build_html(data: dict):
+    cards = []
+    for sensor_name, sensor_data in data.items():
+        parts = [f"<b>{sensor_name}</b>"]
+        for metric_name, value in sensor_data.items():
+            parts.append(f"{metric_name}: {value}")
+
+        cards.append("<p>" + "<br>".join(parts) + "</p>")
+
+    return "\n".join(cards)
+
 @app.post("/api/weather")
 async def receive_weather_data(request: Request):
     global latest_status
@@ -17,7 +28,7 @@ async def receive_weather_data(request: Request):
 
 @app.get("/api/weather")
 async def get_weather_data():
-    return latest_status
+    return build_html(latest_status)
 
 @app.get("/", response_class=HTMLResponse)
 async def get_weather_page():
