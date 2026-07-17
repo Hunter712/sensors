@@ -11,7 +11,11 @@ def build_html(data: dict):
     for sensor_name, sensor_data in data.items():
         parts = [f"<b>{sensor_name}</b>"]
         for metric_name, value in sensor_data.items():
-            parts.append(f"{metric_name}: {value}")
+            rating = sensor_data.get(f"{metric_name}_rating", "")
+            if rating:
+                parts.append(f"{metric_name}: {value} ({rating})")
+            else:
+                parts.append(f"{metric_name}: {value}")
 
         cards.append("<p>" + "<br>".join(parts) + "</p>")
 
