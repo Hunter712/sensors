@@ -4,38 +4,120 @@
     <meta charset="UTF-8">
     <title>Sensors</title>
     <style>
-        .cards { display: flex; gap: 20px; flex-wrap: wrap; }
-        .card { border: 1px solid #ccc; padding: 16px; border-radius: 8px; min-width: 200px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            padding: 30px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            font-size: 24px;
+            color: #1a1a2e;
+            margin-bottom: 28px;
+            letter-spacing: 1px;
+        }
+        .cards {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 20px 24px;
+            min-width: 240px;
+            flex: 1 1 260px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            transition: box-shadow 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+        .card h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eef0f4;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .card p {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #f5f6f8;
+        }
+        .card p:last-child { border-bottom: none; }
+        .label { color: #888; }
+        .value { font-weight: 600; color: #222; }
+        .badge {
+            display: inline-block;
+            padding: 1px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+        .waiting {
+            text-align: center;
+            color: #888;
+            font-size: 16px;
+            padding: 40px;
+        }
     </style>
 </head>
 <body>
-    <div id="content">Waiting for data...</div>
+    <h1>Sensor Dashboard</h1>
+    <div id="content" class="waiting">Waiting for data...</div>
 
     <script>
+        const ratingColors = {
+            cold: '#5bc0de', hot: '#d9534f', normal: '#5cb85c',
+            low: '#f0ad4e', high: '#d9534f',
+            bad: '#d9534f', satisfactory: '#f0ad4e', good: '#5cb85c', excellent: '#5bc0de',
+        };
+
+        function badge(text) {
+            const color = ratingColors[text] || '#888';
+            return '<span class="badge" style="background:' + color + ';color:#fff">' + text + '</span>';
+        }
+
         setInterval(async () => {
             const res = await fetch("/api/weather");
             const data = await res.json();
             const content = document.getElementById("content");
 
             if (data.error || data.message) {
+                content.className = 'waiting';
                 content.textContent = data.error || data.message;
                 return;
             }
 
-            let html = '<div class="cards">';
+            content.className = 'cards';
+            let html = '';
             for (const [name, metrics] of Object.entries(data)) {
                 html += '<div class="card"><h3>' + name + '</h3>';
                 for (const [key, val] of Object.entries(metrics)) {
                     if (key.endsWith('_rating')) continue;
+                    let display = val;
                     if (Array.isArray(val)) {
-                        html += '<p>' + key + ': ' + val[0] + ' (' + val[1] + ')</p>';
+                        display = '<span class="value">' + val[0] + '</span>' + badge(val[1]);
                     } else {
-                        html += '<p>' + key + ': ' + val + '</p>';
+                        display = '<span class="value">' + val + '</span>';
                     }
+                    html += '<p><span class="label">' + key + '</span>' + display + '</p>';
                 }
                 html += '</div>';
             }
-            html += '</div>';
             content.innerHTML = html;
         }, 1000);
     </script>
