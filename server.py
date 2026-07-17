@@ -9,13 +9,12 @@ TEMPLATE = pathlib.Path("templates/index.html").read_text(encoding="utf-8")
 def build_html(data: dict):
     cards = []
     for sensor_name, sensor_data in data.items():
-        parts = [f"<b>{sensor_name}</b>"]
+        parts = [f"<div class='card'><h3>{sensor_name}</h3>"]
         for metric_name, value in sensor_data.items():
-            parts.append(f"{metric_name}: {value[0]}({value[1]})")
-
-        cards.append("<p>" + "<br>".join(parts) + "</p>")
-
-    return "\n".join(cards)
+            parts.append(f"<p>{metric_name}: {value}</p>")
+        parts.append("</div>")
+        cards.append("".join(parts))
+    return "<div class='cards'>" + "".join(cards) + "</div>"
 
 @app.post("/api/weather")
 async def receive_weather_data(request: Request):
