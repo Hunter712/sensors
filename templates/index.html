@@ -17,27 +17,20 @@
             font-size: 24px;
             color: #1a1a2e;
             margin-bottom: 28px;
-            letter-spacing: 1px;
         }
         .cards {
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
             justify-content: center;
-            max-width: 1100px;
-            margin: 0 auto;
         }
         .card {
             background: #fff;
             border-radius: 14px;
             padding: 20px 24px;
-            width: 280px;
-            flex: none;
+            width: 300px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            transition: box-shadow 0.2s;
-        }
-        .card:hover {
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            text-align: center;
         }
         .card h3 {
             font-size: 17px;
@@ -47,25 +40,19 @@
             padding-bottom: 10px;
             border-bottom: 2px solid #eef0f4;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            text-align: center;
         }
-        .card p {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+        .card table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .card td {
             padding: 6px 0;
             font-size: 14px;
             border-bottom: 1px solid #f5f6f8;
         }
-        .card p:last-child { border-bottom: none; }
+        .card tr:last-child td { border-bottom: none; }
         .label { color: #888; text-align: left; }
-        .value {
-            font-weight: 600;
-            color: #222;
-            text-align: right;
-            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-        }
+        .value { font-weight: 600; color: #222; text-align: right; }
         .badge {
             display: inline-block;
             padding: 1px 10px;
@@ -74,7 +61,6 @@
             font-weight: 600;
             margin-left: 6px;
             color: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         .waiting {
             text-align: center;
@@ -114,16 +100,16 @@
             content.className = 'cards';
             let html = '';
             for (const [name, metrics] of Object.entries(data)) {
-                html += '<div class="card"><h3>' + name + '</h3>';
+                html += '<div class="card"><h3>' + name + '</h3><table>';
                 for (const [key, val] of Object.entries(metrics)) {
                     if (key.endsWith('_rating')) continue;
                     if (Array.isArray(val)) {
-                        html += '<p><span class="label">' + key + '</span><span class="value">' + val[0] + ' ' + badge(val[1]) + '</span></p>';
+                        html += '<tr><td class="label">' + key + '</td><td class="value">' + val[0] + ' ' + badge(val[1]) + '</td></tr>';
                     } else {
-                        html += '<p><span class="label">' + key + '</span><span class="value">' + val + '</span></p>';
+                        html += '<tr><td class="label">' + key + '</td><td class="value">' + val + '</td></tr>';
                     }
                 }
-                html += '</div>';
+                html += '</table></div>';
             }
             content.innerHTML = html;
         }, 1000);
