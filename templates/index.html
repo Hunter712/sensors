@@ -4,17 +4,8 @@
     <meta charset="UTF-8">
     <title>Sensors</title>
     <style>
-        .cards {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        .card {
-            border: 1px solid #ccc;
-            padding: 16px;
-            border-radius: 8px;
-            min-width: 200px;
-        }
+        .cards { display: flex; gap: 20px; flex-wrap: wrap; }
+        .card { border: 1px solid #ccc; padding: 16px; border-radius: 8px; min-width: 200px; }
     </style>
 </head>
 <body>
@@ -23,8 +14,24 @@
     <script>
         setInterval(async () => {
             const res = await fetch("/api/weather");
-            const data = await res.text();
-            document.getElementById("content").innerHTML = data;
+            const data = await res.json();
+            const content = document.getElementById("content");
+
+            if (data.error || data.message) {
+                content.textContent = data.error || data.message;
+                return;
+            }
+
+            let html = '<div class="cards">';
+            for (const [name, metrics] of Object.entries(data)) {
+                html += '<div class="card"><h3>' + name + '</h3>';
+                for (const [key, val] of Object.entries(metrics)) {
+                    html += '<p>' + key + ': ' + val + '</p>';
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+            content.innerHTML = html;
         }, 1000);
     </script>
 </body>
