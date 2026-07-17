@@ -35,7 +35,6 @@ setInterval(async()=>{
   for(const[n,m]of Object.entries(d)){
     h+='<div class="card"><h3>'+n+'</h3><table>'
     for(const[k,v]of Object.entries(m)){
-      if(k.endsWith('_rating'))continue
       h+='<tr><td class="l">'+k+'</td><td class="v">'+(Array.isArray(v)?v[0]+' '+B(v[1]):v)+'</td></tr>'
     }
     h+='</table></div>'
