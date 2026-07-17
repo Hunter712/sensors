@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse
 
 app = FastAPI()
-latest_status = "Waiting for data from sensor..."
+latest_status = {"message": "Waiting for data from sensor..."}
 TEMPLATE = pathlib.Path("templates/index.html").read_text(encoding="utf-8")
 
 def build_html(data: dict):

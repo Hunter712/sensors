@@ -10,8 +10,8 @@
     <script>
         setInterval(async () => {
             const res = await fetch("/api/weather");
-            const data = await res.json();
-            document.getElementById("content").textContent = JSON.stringify(data, null, 2);
+            const data = await res.text();
+            document.getElementById("content").innerHTML = data;
         }, 1000);
     </script>
 </body>
