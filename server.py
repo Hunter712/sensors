@@ -13,7 +13,7 @@ def build_html(data: dict):
         for metric_name, value in sensor_data.items():
             parts.append(f"{metric_name}: {value}")
 
-        cards.append("<p>" + "<br>".join(parts) + "</p>")
+        cards.append("<br>".join(parts))
 
     return "\n".join(cards)
 
