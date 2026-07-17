@@ -1,27 +1,21 @@
+import pathlib
 from fastapi import FastAPI, Request
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 latest_status_string = "Waiting for data from sensor..."
+TEMPLATE = pathlib.Path("templates/index.html").read_text(encoding="utf-8")
 
-def format_data(data: dict):
-    lines = []
-    for name, metrics in data.items():
-        parts = [f"{name} - "]
-        if "temperature" in metrics:
-            parts.append(f"temp: {metrics['temperature']:.2f}°C({metrics.get('temperature_rating','')})")
+def build_html(data: dict):
+    cards = []
+    for sensor_name, sensor_data in data.items():
+        parts = [f"<b>{sensor_name}</b>"]
+        for metric_name, value in sensor_data.items():
+            parts.append(f"{metric_name}: {value}")
 
-        if "pressure" in metrics:
-            parts.append(f"press: {metrics['pressure']:.2f}hPa({metrics.get('pressure_rating','')})")
+        cards.append("<p>" + "<br>".join(parts) + "</p>")
 
-        if "humidity" in metrics:
-            parts.append(f"hum: {metrics['humidity']:.2f}%({metrics.get('humidity_rating','')})")
-
-        if "gas" in metrics:
-            parts.append(f"gas: {metrics['gas']:.2f}Ohm({metrics.get('gas_rating','')})")
-        lines.append(" ".join(parts))
-
-    return "\n".join(lines)
+    return "\n".join(cards)
 
 @app.post("/api/weather")
 async def receive_weather_data(request: Request):
@@ -32,14 +26,13 @@ async def receive_weather_data(request: Request):
         latest_status = {"error": f"Invalid JSON: {e}"}
     return {"status": "success"}
 
-@app.get("/", response_class=PlainTextResponse)
+@app.get("/", response_class=HTMLResponse)
 async def get_weather_page():
     if "error" in latest_status:
         body = latest_status["error"]
     elif latest_status.get("message"):
         body = latest_status["message"]
     else:
-        body = format_data(latest_status)
+        body = build_html(latest_status)
 
-    headers = {"Refresh": "1"}
-    return PlainTextResponse(content=body, headers=headers)
+    return HTMLResponse(content=TEMPLATE.replace("{body}", body))
