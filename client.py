@@ -18,67 +18,63 @@ logging.basicConfig(
     ]
 )
 
-def calculating_range(name, temp=None, press=None, hum=None, gas=None):
-    temp_res = ""
-    hum_res = ""
-    press_res = ""
-    gas_res = ""
+def build_sensor_data(name, temp=None, press=None, hum=None, gas=None):
+    data = {"sensor": name}
 
     if temp is not None:
-        temp_res = f"temperature: {temp:.2f} °C"
+        data["temperature"] = round(temp, 2)
 
         if temp < 20:
-            temp_res = temp_res + "(cold)"
+            data["temperature_rating"] = "cold"
         elif 20 <= temp <= 24:
-            temp_res = temp_res + "(normal)"
+            data["temperature_rating"] = "normal"
         elif temp > 24:
-            temp_res = temp_res + "(hot)"
+            data["temperature_rating"] = "hot"
 
     if hum is not None:
-        hum_res = f"humidity: {hum:.2f} %"
+        data["humidity"] = round(hum, 2)
 
         if hum < 30:
-            hum_res = hum_res + "(low)"
+            data["humidity_rating"] = "low"
         elif 30 <= hum <= 60:
-            hum_res = hum_res + "(normal)"
+            data["humidity_rating"] = "normal"
         elif hum > 60:
-            hum_res = hum_res + "(high)"
+            data["humidity_rating"] = "high"
 
     if press is not None:
-        press_res = f"pressure: {press:.2f} hPa"
+        data["pressure"] = round(press, 2)
 
         if press < 990:
-            press_res = press_res + "(low)"
+            data["pressure_rating"] = "low"
         elif 990 <= press <= 1005:
-            press_res = press_res + "(normal)"
+            data["pressure_rating"] = "normal"
         elif press > 1005:
-            press_res = press_res + "(high)"
+            data["pressure_rating"] = "high"
 
 
     if gas is not None:
-        gas_res = f"gas: {gas:.2f} Ohms"
+        data["gas"] = round(gas, 2)
 
         if gas < 12000:
-            gas_res = gas_res + "(bad)"
+            data["gas_rating"] = "bad"
         elif 12000 <= gas <= 30000:
-            gas_res = gas_res + "(satisfactory)"
+            data["gas_rating"] = "satisfactory"
         elif 30000 <= gas <= 60000:
-            gas_res = gas_res + "(good)"
+            data["gas_rating"] = "good"
         elif gas > 60000:
-            gas_res = gas_res + "(excellent)"
+            data["gas_rating"] = "excellent"
 
-    return f"{name}: {temp_res} {press_res} {hum_res} {gas_res}"
+    return data
 
 
-def send_data_to_server(data):
+def send_data_to_server(payload):
     try:
-        headers = {'Content-Type': 'text/plain; charset=utf-8'}
-        requests.post(SERVER_URL, data=data.encode('utf-8'), headers=headers, timeout=5.0)
+        requests.post(SERVER_URL, json=payload, timeout=5.0)
     except requests.exceptions.RequestException as e:
         logging.error(f"Failed to send data to server: {e}")
 
 def calculating_conditions():
-    final_data = ""
+    sensors_data = {}
 
     try:
         i2c = board.I2C()
@@ -114,32 +110,32 @@ def calculating_conditions():
 
         if bme680 is not None:
             try:
-                final_data = calculating_range('bme680', bme680.temperature, bme680.pressure, bme680.humidity, bme680.gas)
+                sensors_data["bme680"] = build_sensor_data('bme680', bme680.temperature, bme680.pressure, bme680.humidity, bme680.gas)
             except Exception as e:
-                final_data = f"[BME680 - Ch0] Error reading data: {e}"
-                logging.error(final_data)
+                sensors_data["bme680"] = {"error": str(e)}
+                logging.error(f"[BME680 - Ch0] Error: {e}")
         else:
-            final_data = "[BME680 - Ch0] Sensor not available"
+            sensors_data["bme680"] = {"error": "Sensor not available"}
 
         if bme280 is not None:
             try:
-                final_data += f"\n{calculating_range('bme280', bme280.temperature, bme280.pressure, bme280.humidity)}"
+                sensors_data["bme680"] = build_sensor_data('bme280', bme280.temperature, bme280.pressure, bme280.humidity)
             except Exception as e:
-                final_data += f"\n[BME280 - Ch2] Error reading data: {e}"
-                logging.error(final_data)
+                sensors_data["bme280"] = {"error": str(e)}
+                logging.error(f"[BME280 - Ch0] Error: {e}")
         else:
-            final_data += "\n[BME280 - Ch2] Sensor not available"
+            sensors_data["bme280"] = {"error": "Sensor not available"}
 
         if bmp280 is not None:
             try:
-                final_data += f"\n{calculating_range('bmp280', bmp280.temperature, bmp280.pressure)}"
+                sensors_data["bme680"] = build_sensor_data('bmp280', bmp280.temperature, bmp280.pressure)
             except Exception as e:
-                final_data += f"\n[BMP280 - Ch1] Error reading data: {e}"
-                logging.error(final_data)
+                sensors_data["bmp280"] = {"error": str(e)}
+                logging.error(f"[BMP280 - Ch0] Error: {e}")
         else:
-            final_data += "\n[BMP280 - Ch1] Sensor not available"
+            sensors_data["bmp280"] = {"error": "Sensor not available"}
 
-        send_data_to_server(final_data)
+        send_data_to_server(sensors_data)
         time.sleep(POLL_INTERVAL)
 
 if __name__ == "__main__":
