@@ -10,13 +10,17 @@ def format_data(data: dict):
         parts = [f"{name} - "]
         if "temperature" in metrics:
             parts.append(f"temp: {metrics['temperature']:.2f}°C({metrics.get('temperature_rating','')})")
-        if "humidity" in metrics:
-            parts.append(f"hum: {metrics['humidity']:.2f}%({metrics.get('humidity_rating','')})")
+
         if "pressure" in metrics:
             parts.append(f"press: {metrics['pressure']:.2f}hPa({metrics.get('pressure_rating','')})")
+
+        if "humidity" in metrics:
+            parts.append(f"hum: {metrics['humidity']:.2f}%({metrics.get('humidity_rating','')})")
+
         if "gas" in metrics:
             parts.append(f"gas: {metrics['gas']:.2f}Ohm({metrics.get('gas_rating','')})")
         lines.append(" ".join(parts))
+
     return "\n".join(lines)
 
 @app.post("/api/weather")
