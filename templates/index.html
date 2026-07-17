@@ -51,16 +51,16 @@
             text-align: center;
         }
         .card p {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
             padding: 6px 0;
             font-size: 14px;
             border-bottom: 1px solid #f5f6f8;
         }
         .card p:last-child { border-bottom: none; }
-        .label { color: #888; }
-        .value { font-weight: 600; color: #222; }
+        .label { color: #888; text-align: left; }
+        .value { font-weight: 600; color: #222; text-align: right; }
         .badge {
             display: inline-block;
             padding: 1px 10px;
