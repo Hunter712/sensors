@@ -30,8 +30,6 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
             data["temperature"] = [round(temp, 2), "hot"]
 
     if press is not None:
-        data["pressure"] = round(press, 2)
-
         if press < 990:
             data["pressure"] = [round(press, 2), "low"]
         elif 990 <= press <= 1005:
@@ -40,8 +38,6 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
             data["pressure"] = [round(press, 2), "high"]
 
     if hum is not None:
-        data["humidity"] = round(hum, 2)
-
         if hum < 30:
             data["humidity"] = [round(hum, 2), "low"]
         elif 30 <= hum <= 60:
