@@ -11,7 +11,7 @@ def build_html(data: dict):
     for sensor_name, sensor_data in data.items():
         parts = [f"<div class='card'><h3>{sensor_name}</h3>"]
         for metric_name, value in sensor_data.items():
-            parts.append(f"<p>{metric_name}: {value}</p>")
+            parts.append(f"<p>{metric_name}: {value[0]}({value[1]})</p>")
         parts.append("</div>")
         cards.append("".join(parts))
     return "<div class='cards'>" + "".join(cards) + "</div>"
