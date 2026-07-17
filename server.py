@@ -1,6 +1,6 @@
 import pathlib
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse
 
 app = FastAPI()
 latest_status = "Waiting for data from sensor..."
@@ -30,7 +30,7 @@ async def receive_weather_data(request: Request):
         latest_status = {"error": f"Invalid JSON: {e}"}
     return {"status": "success"}
 
-@app.get("/api/weather")
+@app.get("/api/weather", response_class=PlainTextResponse)
 async def get_weather_data():
     return build_html(latest_status)
 
