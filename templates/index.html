@@ -2,10 +2,18 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="1">
     <title>Sensors</title>
 </head>
 <body>
-    {body}
+    <h1>Sensor Data</h1>
+    <div id="content">Waiting for data...</div>
+
+    <script>
+        setInterval(async () => {
+            const res = await fetch("/api/weather");
+            const data = await res.json();
+            document.getElementById("content").textContent = JSON.stringify(data, null, 2);
+        }, 1000);
+    </script>
 </body>
 </html>
