@@ -23,14 +23,18 @@
             }
 
             let html = '<div class="cards">';
-            for (const [key, val] of Object.entries(metrics)) {
-                if (key.endsWith('_rating')) continue;
-                const rating = metrics[key + '_rating'];
-                if (rating) {
-                    html += '<p>' + key + ': ' + val + ' (' + rating + ')</p>';
-                } else {
-                    html += '<p>' + key + ': ' + val + '</p>';
+            for (const [name, metrics] of Object.entries(data)) {
+                html += '<div class="card"><h3>' + name + '</h3>';
+                for (const [key, val] of Object.entries(metrics)) {
+                    if (key.endsWith('_rating')) continue;
+                    const rating = metrics[key + '_rating'];
+                    if (rating) {
+                        html += '<p>' + key + ': ' + val + ' (' + rating + ')</p>';
+                    } else {
+                        html += '<p>' + key + ': ' + val + '</p>';
+                    }
                 }
+                html += '</div>';
             }
             html += '</div>';
             content.innerHTML = html;
