@@ -3,7 +3,7 @@ import board
 import adafruit_tca9548a
 import adafruit_bme680
 import adafruit_bmp280
-import adafruit_bme280
+from adafruit_bme280.advanced import Adafruit_BME280_I2C
 import requests
 import logging
 
@@ -105,7 +105,7 @@ def calculating_conditions():
         logging.error(f"Failed to initialize bmp280: {e}")
 
     try:
-        bme280 = adafruit_bme280.Adafruit_BME280_I2C(tca[2])
+        bme280 = Adafruit_BME280_I2C(tca[2], address=0x76)
     except Exception as e:
         bme280 = None
         logging.error(f"Failed to initialize bme280 on ch2: {e}")
@@ -121,15 +121,6 @@ def calculating_conditions():
         else:
             final_data = "[BME680 - Ch0] Sensor not available"
 
-        if bmp280 is not None:
-            try:
-                final_data += f"\n{calculating_range('bmp280', bmp280.temperature, bmp280.pressure)}"
-            except Exception as e:
-                final_data += f"\n[BMP280 - Ch1] Error reading data: {e}"
-                logging.error(final_data)
-        else:
-            final_data += "\n[BMP280 - Ch1] Sensor not available"
-
         if bme280 is not None:
             try:
                 final_data += f"\n{calculating_range('bme280', bme280.temperature, bme280.pressure, bme280.humidity)}"
@@ -138,6 +129,15 @@ def calculating_conditions():
                 logging.error(final_data)
         else:
             final_data += "\n[BME280 - Ch2] Sensor not available"
+
+        if bmp280 is not None:
+            try:
+                final_data += f"\n{calculating_range('bmp280', bmp280.temperature, bmp280.pressure)}"
+            except Exception as e:
+                final_data += f"\n[BMP280 - Ch1] Error reading data: {e}"
+                logging.error(final_data)
+        else:
+            final_data += "\n[BMP280 - Ch1] Sensor not available"
 
         send_data_to_server(final_data)
         time.sleep(POLL_INTERVAL)
