@@ -22,47 +22,44 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
     data = {}
 
     if temp is not None:
-        data["temperature"] = round(temp, 2)
-
         if temp < 20:
-            data["temperature_rating"] = "cold"
+            data["temperature"] = [round(temp, 2), "cold"]
         elif 20 <= temp <= 24:
-            data["temperature_rating"] = "normal"
+            data["temperature"] = [round(temp, 2), "normal"]
         elif temp > 24:
-            data["temperature_rating"] = "hot"
+            data["temperature"] = [round(temp, 2), "hot"]
 
     if hum is not None:
         data["humidity"] = round(hum, 2)
 
         if hum < 30:
-            data["humidity_rating"] = "low"
+            data["humidity"] = [round(hum, 2), "low"]
         elif 30 <= hum <= 60:
-            data["humidity_rating"] = "normal"
+            data["humidity"] = [round(hum, 2), "normal"]
         elif hum > 60:
-            data["humidity_rating"] = "high"
+            data["humidity"] = [round(hum, 2), "high"]
 
     if press is not None:
         data["pressure"] = round(press, 2)
 
         if press < 990:
-            data["pressure_rating"] = "low"
+            data["pressure"] = [round(press, 2), "low"]
         elif 990 <= press <= 1005:
-            data["pressure_rating"] = "normal"
+            data["pressure"] = [round(press, 2), "normal"]
         elif press > 1005:
-            data["pressure_rating"] = "high"
+            data["pressure"] = [round(press, 2), "high"]
 
 
     if gas is not None:
-        data["gas"] = round(gas, 2)
-
         if gas < 12000:
             data["gas_rating"] = "bad"
+            data["gas"] = [round(gas, 2), "bad"]
         elif 12000 <= gas <= 30000:
-            data["gas_rating"] = "satisfactory"
+            data["gas"] = [round(gas, 2), "satisfactory"]
         elif 30000 <= gas <= 60000:
-            data["gas_rating"] = "good"
+            data["gas"] = [round(gas, 2), "good"]
         elif gas > 60000:
-            data["gas_rating"] = "excellent"
+            data["gas"] = [round(gas, 2), "excellent"]
 
     return data
 
