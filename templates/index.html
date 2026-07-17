@@ -27,9 +27,8 @@
                 html += '<div class="card"><h3>' + name + '</h3>';
                 for (const [key, val] of Object.entries(metrics)) {
                     if (key.endsWith('_rating')) continue;
-                    const rating = metrics[key + '_rating'];
-                    if (rating) {
-                        html += '<p>' + key + ': ' + val + ' (' + rating + ')</p>';
+                    if (Array.isArray(val)) {
+                        html += '<p>' + key + ': ' + val[0] + ' (' + val[1] + ')</p>';
                     } else {
                         html += '<p>' + key + ': ' + val + '</p>';
                     }
