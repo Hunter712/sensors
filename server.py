@@ -5,9 +5,6 @@ from fastapi.responses import HTMLResponse
 app = FastAPI()
 latest_status = {"message": "Waiting for data from sensor..."}
 
-TEMPLATE = pathlib.Path("templates/index.html").read_text(encoding="utf-8")
-
-
 @app.post("/api/weather")
 async def receive_weather_data(request: Request):
     global latest_status
@@ -25,4 +22,5 @@ async def get_weather_data():
 
 @app.get("/", response_class=HTMLResponse)
 async def get_weather_page():
-    return HTMLResponse(content=TEMPLATE)
+    html = pathlib.Path("templates/index.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
