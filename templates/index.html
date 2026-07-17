@@ -1,118 +1,47 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Sensors</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f0f2f5;
-            padding: 30px;
-            color: #333;
-        }
-        h1 {
-            text-align: center;
-            font-weight: 600;
-            font-size: 24px;
-            color: #1a1a2e;
-            margin-bottom: 28px;
-        }
-        .cards {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .card {
-            background: #fff;
-            border-radius: 14px;
-            padding: 20px 24px;
-            width: 300px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            text-align: center;
-        }
-        .card h3 {
-            font-size: 17px;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 14px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #eef0f4;
-            text-transform: uppercase;
-        }
-        .card table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .card td {
-            padding: 6px 0;
-            font-size: 14px;
-            border-bottom: 1px solid #f5f6f8;
-        }
-        .card tr:last-child td { border-bottom: none; }
-        .label { color: #888; text-align: left; }
-        .value { font-weight: 600; color: #222; text-align: right; }
-        .badge {
-            display: inline-block;
-            padding: 1px 10px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-left: 6px;
-            color: #fff;
-        }
-        .waiting {
-            text-align: center;
-            color: #888;
-            font-size: 16px;
-            padding: 40px;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Sensors</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;padding:30px;color:#333}
+h1{text-align:center;font-size:24px;color:#1a1a2e;margin-bottom:28px}
+.cards{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.card{background:#fff;border-radius:14px;padding:20px 24px;width:300px;box-shadow:0 2px 12px rgba(0,0,0,.08);text-align:center}
+.card h3{font-size:17px;font-weight:600;color:#1a1a2e;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #eef0f4;text-transform:uppercase}
+.card table{width:100%;border-collapse:collapse}
+.card td{padding:6px 0;font-size:14px;border-bottom:1px solid #f5f6f8}
+.card tr:last-child td{border-bottom:none}
+.l{color:#888;text-align:left}
+.v{font-weight:600;color:#222;text-align:right}
+.b{display:inline-block;padding:1px 10px;border-radius:10px;font-size:11px;font-weight:600;margin-left:6px;color:#fff}
+.w{text-align:center;color:#888;font-size:16px;padding:40px}
+</style>
 </head>
 <body>
-    <h1>Sensor Dashboard</h1>
-    <div id="content" class="waiting">Waiting for data...</div>
+<h1>Sensor Dashboard</h1>
+<div id="c" class="w">Waiting for data...</div>
 
-    <script>
-        const ratingColors = {
-            cold: '#5bc0de', hot: '#d9534f', normal: '#5cb85c',
-            low: '#f0ad4e', high: '#d9534f',
-            bad: '#d9534f', satisfactory: '#f0ad4e', good: '#5cb85c', excellent: '#5bc0de',
-        };
+<script>
+const C={cold:'#5bc0de',hot:'#d9534f',normal:'#5cb85c',low:'#f0ad4e',high:'#d9534f',bad:'#d9534f',satisfactory:'#f0ad4e',good:'#5cb85c',excellent:'#5bc0de'}
+const B=t=>'<span class="b" style="background:'+(C[t]||'#888')+'">'+t+'</span>'
 
-        function badge(text) {
-            const color = ratingColors[text] || '#888';
-            return '<span class="badge" style="background:' + color + '">' + text + '</span>';
-        }
-
-        setInterval(async () => {
-            const res = await fetch("/api/weather");
-            const data = await res.json();
-            const content = document.getElementById("content");
-
-            if (data.error || data.message) {
-                content.className = 'waiting';
-                content.textContent = data.error || data.message;
-                return;
-            }
-
-            content.className = 'cards';
-            let html = '';
-            for (const [name, metrics] of Object.entries(data)) {
-                html += '<div class="card"><h3>' + name + '</h3><table>';
-                for (const [key, val] of Object.entries(metrics)) {
-                    if (key.endsWith('_rating')) continue;
-                    if (Array.isArray(val)) {
-                        html += '<tr><td class="label">' + key + '</td><td class="value">' + val[0] + ' ' + badge(val[1]) + '</td></tr>';
-                    } else {
-                        html += '<tr><td class="label">' + key + '</td><td class="value">' + val + '</td></tr>';
-                    }
-                }
-                html += '</table></div>';
-            }
-            content.innerHTML = html;
-        }, 1000);
-    </script>
+setInterval(async()=>{
+  const r=await fetch('/api/weather'),d=await r.json(),e=document.getElementById('c')
+  if(d.error||d.message){e.className='w';e.textContent=d.error||d.message;return}
+  e.className='cards'
+  let h=''
+  for(const[n,m]of Object.entries(d)){
+    h+='<div class="card"><h3>'+n+'</h3><table>'
+    for(const[k,v]of Object.entries(m)){
+      if(k.endsWith('_rating'))continue
+      h+='<tr><td class="l">'+k+'</td><td class="v">'+(Array.isArray(v)?v[0]+' '+B(v[1]):v)+'</td></tr>'
+    }
+    h+='</table></div>'
+  }
+  e.innerHTML=h
+},1000)
+</script>
 </body>
 </html>
