@@ -4,6 +4,12 @@ from fastapi.responses import JSONResponse
 app = FastAPI()
 latest_status_string = "Waiting for data from sensor..."
 
+def format_sensor_data(data: dict):
+    result = ""
+    for sensor_name, sensor_data in data.items():
+        result += f"{sensor_data}\n"
+    return result
+
 @app.post("/api/weather")
 async def receive_weather_data(request: Request):
     global latest_status
@@ -16,4 +22,4 @@ async def receive_weather_data(request: Request):
 @app.get("/")
 async def get_weather_page():
     headers = {"Refresh": "1", "Content-Type": "application/json; charset=utf-8"}
-    return JSONResponse(content=latest_status, headers=headers)
+    return JSONResponse(content=format_sensor_data(latest_status), headers=headers)
