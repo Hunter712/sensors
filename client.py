@@ -103,7 +103,8 @@ def calculating_conditions():
             avg_t = (bme680.temperature + bme280.temperature + bmp280.temperature)/3
             avg_p = (bme680.pressure + bme280.pressure + bmp280.pressure)/3
             avg_h = (bme680.humidity + bme280.humidity)/2
-            sensors_data["AVG"] = build_sensor_data(avg_t, avg_p, avg_h)
+            avg_g = bme680.gas
+            sensors_data["AVG"] = build_sensor_data(avg_t, avg_p, avg_h, avg_g)
         else:
             sensors_data["AVG"] = {"error": "Sensor not available"}
 
