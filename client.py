@@ -7,7 +7,7 @@ from adafruit_bme280.advanced import Adafruit_BME280_I2C
 import requests
 import logging
 
-POLL_INTERVAL = 10.0
+POLL_INTERVAL = 20.0
 SERVER_URL = "http://192.168.31.96:8000/api/weather"
 logging.basicConfig(
     level=logging.INFO,
@@ -24,7 +24,7 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
     if temp is not None:
         if temp < 20:
             data["temperature"] = [round(temp, 2), "cold"]
-        elif 20 <= temp <= 24:
+        elif temp <= 24:
             data["temperature"] = [round(temp, 2), "normal"]
         elif temp > 24:
             data["temperature"] = [round(temp, 2), "hot"]
@@ -32,7 +32,7 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
     if press is not None:
         if press < 990:
             data["pressure"] = [round(press, 2), "low"]
-        elif 990 <= press <= 1005:
+        elif press <= 1005:
             data["pressure"] = [round(press, 2), "normal"]
         elif press > 1005:
             data["pressure"] = [round(press, 2), "high"]
@@ -40,7 +40,7 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
     if hum is not None:
         if hum < 30:
             data["humidity"] = [round(hum, 2), "low"]
-        elif 30 <= hum <= 60:
+        elif hum <= 60:
             data["humidity"] = [round(hum, 2), "normal"]
         elif hum > 60:
             data["humidity"] = [round(hum, 2), "high"]
@@ -48,9 +48,9 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
     if gas is not None:
         if gas < 12000:
             data["gas"] = [round(gas, 2), "bad"]
-        elif 12000 <= gas <= 30000:
+        elif gas < 30000:
             data["gas"] = [round(gas, 2), "satisfactory"]
-        elif 30000 <= gas <= 60000:
+        elif gas < 60000:
             data["gas"] = [round(gas, 2), "good"]
         elif gas > 60000:
             data["gas"] = [round(gas, 2), "excellent"]
@@ -102,6 +102,7 @@ def calculating_conditions():
         if bme680 is not None:
             try:
                 sensors_data["bme680"] = build_sensor_data(bme680.temperature, bme680.pressure, bme680.humidity, bme680.gas)
+                logging.info(f"gas_raw: {bme680.gas}")
             except Exception as e:
                 sensors_data["bme680"] = {"error": str(e)}
                 logging.error(f"[BME680 - Ch0] Error: {e}")
