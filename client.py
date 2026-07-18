@@ -46,13 +46,13 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
             data["humidity"] = [round(hum, 2), "high"]
 
     if gas is not None:
-        if gas < 12000:
+        if gas < 20000:
             data["gas"] = [round(gas, 2), "bad"]
-        elif gas <  30000:
+        elif gas <  50000:
             data["gas"] = [round(gas, 2), "satisfactory"]
-        elif gas < 60000:
+        elif gas < 100000:
             data["gas"] = [round(gas, 2), "good"]
-        elif gas > 60000:
+        elif gas > 100000:
             data["gas"] = [round(gas, 2), "excellent"]
 
     return data
@@ -111,7 +111,6 @@ def calculating_conditions():
         if bme680 is not None:
             try:
                 sensors_data["bme680"] = build_sensor_data(bme680.temperature, bme680.pressure, bme680.humidity, bme680.gas)
-                logging.info(f"gas_raw: {bme680.gas}")
             except Exception as e:
                 sensors_data["bme680"] = {"error": str(e)}
                 logging.error(f"[BME680 - Ch0] Error: {e}")
