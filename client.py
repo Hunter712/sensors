@@ -127,6 +127,14 @@ def calculating_conditions():
         else:
             sensors_data["bmp280"] = {"error": "Sensor not available"}
 
+        if bmp280 is not None and bme280 is not None and bme680 is not None:
+            avg_t = (bme680.temperature + bme280.temperature + bmp280.temperature)/3
+            avg_p = (bme680.pressure + bme280.pressure + bmp280.pressure)/3
+            avg_h = (bme680.humidity + bme280.humidity)/2
+            sensors_data["AVG"] = build_sensor_data(avg_t, avg_p, avg_h)
+        else:
+            sensors_data["AVG"] = {"error": "Sensor not available"}
+
         send_data_to_server(sensors_data)
         time.sleep(POLL_INTERVAL)
 
