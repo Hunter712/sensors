@@ -48,7 +48,7 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
     if gas is not None:
         if gas < 12000:
             data["gas"] = [round(gas, 2), "bad"]
-        elif gas < 30000:
+        elif gas <  30000:
             data["gas"] = [round(gas, 2), "satisfactory"]
         elif gas < 60000:
             data["gas"] = [round(gas, 2), "good"]
@@ -99,6 +99,14 @@ def calculating_conditions():
 
     while True:
 
+        if bmp280 is not None and bme280 is not None and bme680 is not None:
+            avg_t = (bme680.temperature + bme280.temperature + bmp280.temperature)/3
+            avg_p = (bme680.pressure + bme280.pressure + bmp280.pressure)/3
+            avg_h = (bme680.humidity + bme280.humidity)/2
+            sensors_data["AVG"] = build_sensor_data(avg_t, avg_p, avg_h)
+        else:
+            sensors_data["AVG"] = {"error": "Sensor not available"}
+
         if bme680 is not None:
             try:
                 sensors_data["bme680"] = build_sensor_data(bme680.temperature, bme680.pressure, bme680.humidity, bme680.gas)
@@ -126,14 +134,6 @@ def calculating_conditions():
                 logging.error(f"[BMP280 - Ch0] Error: {e}")
         else:
             sensors_data["bmp280"] = {"error": "Sensor not available"}
-
-        if bmp280 is not None and bme280 is not None and bme680 is not None:
-            avg_t = (bme680.temperature + bme280.temperature + bmp280.temperature)/3
-            avg_p = (bme680.pressure + bme280.pressure + bmp280.pressure)/3
-            avg_h = (bme680.humidity + bme280.humidity)/2
-            sensors_data["AVG"] = build_sensor_data(avg_t, avg_p, avg_h)
-        else:
-            sensors_data["AVG"] = {"error": "Sensor not available"}
 
         send_data_to_server(sensors_data)
         time.sleep(POLL_INTERVAL)
