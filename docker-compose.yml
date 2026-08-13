@@ -4,10 +4,10 @@ networks:
 
 services:
   fastapi-app:
-    build: .                          # Собирать образ из Dockerfile в этой же папке
-    container_name: fastapi_dev
+    build: .
+    container_name: sensors
     restart: always
     ports:
-      - "8000:8000"                   # Пробрасываем порт 8000 наружу на плату
+      - "8000:8000"
     volumes:
-      - .:/app                        # Монтируем текущую папку, чтобы изменения в коде подтягивались на лету
+      - .:/app
