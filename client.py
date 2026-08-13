@@ -1,14 +1,14 @@
 import time
-import board
-import adafruit_tca9548a
+import requests
+import logging
+from adafruit_extended_bus import ExtendedI2C
 import adafruit_bme680
 import adafruit_bmp280
 from adafruit_bme280.advanced import Adafruit_BME280_I2C
-import requests
-import logging
 
 POLL_INTERVAL = 20.0
 SERVER_URL = "http://192.168.31.96:8000/api/weather"
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -18,7 +18,9 @@ logging.basicConfig(
     ]
 )
 
+
 def build_sensor_data(temp=None, press=None, hum=None, gas=None):
+    """Categorizes sensor readings for telemetry payload."""
     data = {}
 
     if temp is not None:
@@ -26,7 +28,7 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
             data["temperature"] = [round(temp, 2), "cold"]
         elif temp <= 24:
             data["temperature"] = [round(temp, 2), "normal"]
-        elif temp > 24:
+        else:
             data["temperature"] = [round(temp, 2), "hot"]
 
     if press is not None:
@@ -34,7 +36,7 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
             data["pressure"] = [round(press, 2), "low"]
         elif press <= 1005:
             data["pressure"] = [round(press, 2), "normal"]
-        elif press > 1005:
+        else:
             data["pressure"] = [round(press, 2), "high"]
 
     if hum is not None:
@@ -42,101 +44,118 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
             data["humidity"] = [round(hum, 2), "low"]
         elif hum <= 60:
             data["humidity"] = [round(hum, 2), "normal"]
-        elif hum > 60:
+        else:
             data["humidity"] = [round(hum, 2), "high"]
 
     if gas is not None:
         if gas < 20000:
             data["gas"] = [round(gas, 2), "bad"]
-        elif gas <  50000:
+        elif gas < 50000:
             data["gas"] = [round(gas, 2), "satisfactory"]
         elif gas < 100000:
             data["gas"] = [round(gas, 2), "good"]
-        elif gas > 100000:
+        else:
             data["gas"] = [round(gas, 2), "excellent"]
 
     return data
 
 
 def send_data_to_server(payload):
+    """Sends collected weather metrics to central server."""
     try:
         requests.post(SERVER_URL, json=payload, timeout=5.0)
+        logging.info("Telemetry successfully delivered to server.")
     except requests.exceptions.RequestException as e:
         logging.error(f"Failed to send data to server: {e}")
 
+
+def initialize_sensors():
+    """Initializes hardware devices on independent kernel virtual I2C buses."""
+    sensors = {"bme680": None, "bmp280": None, "bme280": None}
+
+    # BME680 on TCA9548A Channel 0 (/dev/i2c-11)
+    try:
+        i2c_ch0 = ExtendedI2C(11)
+        sensors["bme680"] = adafruit_bme680.Adafruit_BME680_I2C(i2c_ch0)
+        logging.info("BME680 initialized on bus /dev/i2c-11")
+    except Exception as e:
+        logging.error(f"Failed to initialize BME680 on ch0: {e}")
+
+    # BMP280 on TCA9548A Channel 1 (/dev/i2c-12)
+    try:
+        i2c_ch1 = ExtendedI2C(12)
+        sensors["bmp280"] = adafruit_bmp280.Adafruit_BMP280_I2C(i2c_ch1, address=0x76)
+        logging.info("BMP280 initialized on bus /dev/i2c-12")
+    except Exception as e:
+        logging.error(f"Failed to initialize BMP280 on ch1: {e}")
+
+    # BME280 on TCA9548A Channel 2 (/dev/i2c-13)
+    try:
+        i2c_ch2 = ExtendedI2C(13)
+        sensors["bme280"] = Adafruit_BME280_I2C(i2c_ch2, address=0x76)
+        logging.info("BME280 initialized on bus /dev/i2c-13")
+    except Exception as e:
+        logging.error(f"Failed to initialize BME280 on ch2: {e}")
+
+    return sensors
+
+
 def calculating_conditions():
-    sensors_data = {}
-
-    try:
-        i2c = board.I2C()
-    except Exception as e:
-        logging.error(f"Failed to initialize I2C: {e}")
-        return
-
-    try:
-        tca = adafruit_tca9548a.TCA9548A(i2c)
-    except Exception as e:
-        logging.error(f"Failed to initialize PCA9548A: {e}")
-        return
-
-    try:
-        bme680 = adafruit_bme680.Adafruit_BME680_I2C(tca[0])
-    except Exception as e:
-        bme680 = None
-        logging.error(f"Failed to initialize bme680: {e}")
-
-    try:
-        bmp280 = adafruit_bmp280.Adafruit_BMP280_I2C(tca[1], address=0x76)
-    except Exception as e:
-        bmp280 = None
-        logging.error(f"Failed to initialize bmp280: {e}")
-
-    try:
-        bme280 = Adafruit_BME280_I2C(tca[2], address=0x76)
-    except Exception as e:
-        bme280 = None
-        logging.error(f"Failed to initialize bme280 on ch2: {e}")
+    sensors = initialize_sensors()
 
     while True:
+        sensors_data = {}
+        t_list, p_list, h_list = [], [], []
 
-        if bmp280 is not None and bme280 is not None and bme680 is not None:
-            avg_t = (bme680.temperature + bme280.temperature + bmp280.temperature)/3
-            avg_p = (bme680.pressure + bme280.pressure + bmp280.pressure)/3
-            avg_h = (bme680.humidity + bme280.humidity)/2
-            avg_g = bme680.gas
-            sensors_data["AVG"] = build_sensor_data(avg_t, avg_p, avg_h, avg_g)
-        else:
-            sensors_data["AVG"] = {"error": "Sensor not available"}
-
-        if bme680 is not None:
+        # Read BME680 (Ch0)
+        if sensors["bme680"] is not None:
             try:
-                sensors_data["bme680"] = build_sensor_data(bme680.temperature, bme680.pressure, bme680.humidity, bme680.gas)
+                t, p = sensors["bme680"].temperature, sensors["bme680"].pressure
+                h, g = sensors["bme680"].humidity, sensors["bme680"].gas
+                sensors_data["bme680"] = build_sensor_data(t, p, h, g)
+                t_list.append(t)
+                p_list.append(p)
+                h_list.append(h)
             except Exception as e:
                 sensors_data["bme680"] = {"error": str(e)}
-                logging.error(f"[BME680 - Ch0] Error: {e}")
-        else:
-            sensors_data["bme680"] = {"error": "Sensor not available"}
+                logging.error(f"[BME680 - Ch0] Read Error: {e}")
 
-        if bme280 is not None:
+        # Read BMP280 (Ch1)
+        if sensors["bmp280"] is not None:
             try:
-                sensors_data["bme280"] = build_sensor_data(bme280.temperature, bme280.pressure, bme280.humidity)
-            except Exception as e:
-                sensors_data["bme280"] = {"error": str(e)}
-                logging.error(f"[BME280 - Ch0] Error: {e}")
-        else:
-            sensors_data["bme280"] = {"error": "Sensor not available"}
-
-        if bmp280 is not None:
-            try:
-                sensors_data["bmp280"] = build_sensor_data(bmp280.temperature, bmp280.pressure)
+                t, p = sensors["bmp280"].temperature, sensors["bmp280"].pressure
+                sensors_data["bmp280"] = build_sensor_data(t, p)
+                t_list.append(t)
+                p_list.append(p)
             except Exception as e:
                 sensors_data["bmp280"] = {"error": str(e)}
-                logging.error(f"[BMP280 - Ch0] Error: {e}")
+                logging.error(f"[BMP280 - Ch1] Read Error: {e}")
+
+        # Read BME280 (Ch2)
+        if sensors["bme280"] is not None:
+            try:
+                t, p, h = sensors["bme280"].temperature, sensors["bme280"].pressure, sensors["bme280"].humidity
+                sensors_data["bme280"] = build_sensor_data(t, p, h)
+                t_list.append(t)
+                p_list.append(p)
+                h_list.append(h)
+            except Exception as e:
+                sensors_data["bme280"] = {"error": str(e)}
+                logging.error(f"[BME280 - Ch2] Read Error: {e}")
+
+        # Calculate average telemetry metrics
+        if t_list and p_list:
+            avg_t = sum(t_list) / len(t_list)
+            avg_p = sum(p_list) / len(p_list)
+            avg_h = (sum(h_list) / len(h_list)) if h_list else None
+            avg_g = sensors["bme680"].gas if sensors["bme680"] is not None else None
+            sensors_data["AVG"] = build_sensor_data(avg_t, avg_p, avg_h, avg_g)
         else:
-            sensors_data["bmp280"] = {"error": "Sensor not available"}
+            sensors_data["AVG"] = {"error": "Sensors unavailable"}
 
         send_data_to_server(sensors_data)
         time.sleep(POLL_INTERVAL)
+
 
 if __name__ == "__main__":
     calculating_conditions()
