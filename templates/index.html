@@ -6,285 +6,136 @@
   <title>Sensor Dashboard</title>
   <style>
     :root {
-      --bg: #f0f2f5;
-      --card-bg: #ffffff;
-      --avg-bg: #f8faff;
-      --avg-border: #3b82f6;
-      --text-main: #1a1a2e;
-      --text-value: #222222;
-      --text-muted: #7a828e;
-      --border: #eef0f4;
-      --row-border: #f5f6f8;
+      --bg: #f0f2f5; --card: #fff; --avg-bg: #f8faff; --avg-border: #3b82f6;
+      --text: #1a1a2e; --muted: #7a828e; --border: #eef0f4; --row: #f5f6f8;
       --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     }
-
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #121418;
-        --card-bg: #1c1f26;
-        --avg-bg: #1e2433;
-        --avg-border: #60a5fa;
-        --text-main: #f3f4f6;
-        --text-value: #e5e7eb;
-        --text-muted: #9ca3af;
-        --border: #2d323e;
-        --row-border: #252932;
+        --bg: #121418; --card: #1c1f26; --avg-bg: #1e2433; --avg-border: #60a5fa;
+        --text: #f3f4f6; --muted: #9ca3af; --border: #2d323e; --row: #252932;
         --shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
       }
     }
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text-value);
-      padding: 24px 16px;
-      min-height: 100vh;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 28px;
-    }
-
-    h1 {
-      font-size: 24px;
-      color: var(--text-main);
-      margin-bottom: 6px;
-    }
-
-    .status-bar {
-      font-size: 13px;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #9ca3af;
-      display: inline-block;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 24px 16px; min-height: 100vh; }
+    header { text-align: center; margin-bottom: 24px; }
+    h1 { font-size: 24px; margin-bottom: 6px; }
+    .status-bar { font-size: 13px; color: var(--muted); display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; display: inline-block; transition: background 0.3s; }
     .dot.online { background: #5cb85c; }
+    .dot.stale { background: #f0ad4e; }
     .dot.offline { background: #d9534f; }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 320px));
-      gap: 20px;
-      justify-content: center;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border-radius: 14px;
-      padding: 20px 24px;
-      box-shadow: var(--shadow);
-      border: 1px solid transparent;
-    }
-
-    .card.avg-card {
-      background: var(--avg-bg);
-      border-color: var(--avg-border);
-    }
-
-    .card h3 {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 14px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid var(--border);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      text-align: center;
-    }
-
-    .card table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .card td {
-      padding: 8px 0;
-      font-size: 14px;
-      border-bottom: 1px solid var(--row-border);
-    }
-
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 320px)); gap: 20px; justify-content: center; max-width: 1400px; margin: 0 auto; }
+    .card { background: var(--card); border-radius: 14px; padding: 20px 24px; box-shadow: var(--shadow); border: 1px solid transparent; }
+    .card.avg-card { background: var(--avg-bg); border-color: var(--avg-border); }
+    .card h3 { font-size: 16px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--border); text-align: center; text-transform: uppercase; }
+    .card table { width: 100%; border-collapse: collapse; }
+    .card td { padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--row); }
     .card tr:last-child td { border-bottom: none; }
-
-    .label {
-      color: var(--text-muted);
-      text-align: left;
-      text-transform: capitalize;
-    }
-
-    .value {
-      font-weight: 600;
-      color: var(--text-value);
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 2px 9px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 600;
-      margin-left: 8px;
-      color: #fff;
-      text-transform: lowercase;
-    }
-
-    .empty-state {
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 16px;
-      padding: 40px;
-    }
+    .label { color: var(--muted); text-transform: capitalize; }
+    .value { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-left: 8px; color: #fff; }
+    .empty-state { text-align: center; color: var(--muted); font-size: 16px; padding: 40px; }
   </style>
 </head>
 <body>
   <header>
     <h1>Sensor Dashboard</h1>
     <div class="status-bar">
-      <span id="status-dot" class="dot"></span>
-      <span id="status-text">Waiting for server...</span>
+      <span id="dot" class="dot"></span>
+      <span id="text">Connecting...</span>
     </div>
   </header>
 
   <main id="container" class="empty-state">Waiting for data...</main>
 
   <script>
-    const POLL_MS = 3000;
+    const COLORS = { normal: '#5cb85c', good: '#5cb85c', cold: '#5bc0de', excellent: '#5bc0de', low: '#f0ad4e', satisfactory: '#f0ad4e', hot: '#d9534f', high: '#d9534f', bad: '#d9534f' };
+    const UNITS = { temperature: '°C', pressure: 'hPa', humidity: '%', gas: 'Ω' };
 
-    const BADGE_COLORS = {
-      cold: '#5bc0de',
-      hot: '#d9534f',
-      normal: '#5cb85c',
-      low: '#f0ad4e',
-      high: '#d9534f',
-      bad: '#d9534f',
-      satisfactory: '#f0ad4e',
-      good: '#5cb85c',
-      excellent: '#5bc0de'
-    };
+    const $ = id => document.getElementById(id);
+    const container = $('container'), dot = $('dot'), text = $('text');
 
-    const UNITS = {
-      temperature: '°C',
-      pressure: 'hPa',
-      humidity: '%',
-      gas: 'Ω'
-    };
+    let current = null, isOnline = false, lastHash = '';
 
-    const container = document.getElementById('container');
-    const statusDot = document.getElementById('status-dot');
-    const statusText = document.getElementById('status-text');
-
-    let lastPayloadHash = '';
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
 
-    function formatValue(key, rawValue) {
-      if (key === 'gas' && typeof rawValue === 'number') {
-        return rawValue >= 1000 ? `${(rawValue / 1000).toFixed(1)} kΩ` : `${rawValue} Ω`;
-      }
-      const unit = UNITS[key] ? ` ${UNITS[key]}` : '';
-      return `${escapeHtml(rawValue)}${unit}`;
+    function setStatus(cls, msg) {
+      dot.className = 'dot ' + cls;
+      text.textContent = msg;
     }
 
-    function renderBadge(status) {
-      const color = BADGE_COLORS[status] || '#888';
-      return `<span class="badge" style="background:${color}">${escapeHtml(status)}</span>`;
+    function relTime(sec) {
+      if (sec < 5) return 'just now';
+      if (sec < 60) return `${sec}s ago`;
+      return sec < 3600 ? `${Math.floor(sec / 60)}m ago` : `${Math.floor(sec / 3600)}h ago`;
     }
 
-    function renderDashboard(sensorData) {
-      if (!sensorData || sensorData.error || sensorData.message) {
+    function updateStatus() {
+      if (!isOnline) return setStatus('offline', 'Server connection lost');
+      if (!current || !current.updated_at) return setStatus('', 'Waiting for telemetry...');
+
+      const secAgo = Math.round(current.baseSecAgo + (Date.now() - current.receivedAt) / 1000);
+      const timeStr = new Date(current.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const ago = relTime(secAgo);
+
+      if (secAgo <= 35) setStatus('online', `Online • ${timeStr} (${ago})`);
+      else if (secAgo <= 60) setStatus('stale', `Delayed • ${timeStr} (${ago})`);
+      else setStatus('offline', `Sensor offline • Last seen ${ago} (${timeStr})`);
+    }
+
+    function render(data) {
+      if (!data || data.error || data.message) {
         container.className = 'empty-state';
-        container.textContent = (sensorData && (sensorData.error || sensorData.message)) || 'Waiting for data...';
+        container.textContent = (data && (data.error || data.message)) || 'Waiting for data...';
         return;
       }
 
-      const entries = Object.entries(sensorData).sort(([a], [b]) => {
-        if (a === 'AVG') return -1;
-        if (b === 'AVG') return 1;
-        return 0;
-      });
-
       container.className = 'cards';
-      container.innerHTML = entries.map(([sensorName, metrics]) => {
-        const isAvg = sensorName.toUpperCase() === 'AVG';
-        const rows = Object.entries(metrics).map(([key, val]) => {
-          const formatted = Array.isArray(val)
-            ? `${formatValue(key, val[0])} ${renderBadge(val[1])}`
-            : escapeHtml(val);
-
-          return `
-            <tr>
-              <td class="label">${escapeHtml(key)}</td>
-              <td class="value">${formatted}</td>
-            </tr>
-          `;
-        }).join('');
-
-        return `
-          <section class="card ${isAvg ? 'avg-card' : ''}">
-            <h3>${escapeHtml(sensorName)}</h3>
-            <table>${rows}</table>
+      container.innerHTML = Object.entries(data)
+        .sort(([a], [b]) => a === 'AVG' ? -1 : (b === 'AVG' ? 1 : 0))
+        .map(([sensor, metrics]) => `
+          <section class="card ${sensor === 'AVG' ? 'avg-card' : ''}">
+            <h3>${escapeHtml(sensor)}</h3>
+            <table>
+              ${Object.entries(metrics).map(([k, v]) => {
+                let valStr = escapeHtml(v);
+                if (Array.isArray(v)) {
+                  const num = (k === 'gas' && v[0] >= 1000) ? `${(v[0]/1000).toFixed(1)} kΩ` : `${v[0]}${UNITS[k] ? ' ' + UNITS[k] : ''}`;
+                  valStr = `${num} <span class="badge" style="background:${COLORS[v[1]] || '#888'}">${escapeHtml(v[1])}</span>`;
+                }
+                return `<tr><td class="label">${escapeHtml(k)}</td><td class="value">${valStr}</td></tr>`;
+              }).join('')}
+            </table>
           </section>
-        `;
-      }).join('');
+        `).join('');
     }
 
-    async function fetchWeather() {
-      if (document.hidden) return;
+    // Подключение по SSE
+    const sse = new EventSource('/api/weather/stream');
+    sse.onopen = () => { isOnline = true; updateStatus(); };
+    sse.onerror = () => { isOnline = false; updateStatus(); };
+    sse.onmessage = e => {
+      isOnline = true;
+      const payload = JSON.parse(e.data);
 
-      try {
-        const response = await fetch('/api/weather', { cache: 'no-store' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      payload.baseSecAgo = (payload.server_time && payload.updated_at)
+        ? Math.max(0, (new Date(payload.server_time) - new Date(payload.updated_at)) / 1000)
+        : 0;
+      payload.receivedAt = Date.now();
+      current = payload;
 
-        const text = await response.text();
-        const payload = JSON.parse(text);
-
-        if (payload.updated_at) {
-          statusDot.className = 'dot online';
-          statusText.textContent = `Updated: ${payload.updated_at}`;
-        } else {
-          statusDot.className = 'dot';
-          statusText.textContent = 'No telemetry received yet';
-        }
-
-        if (text !== lastPayloadHash) {
-          lastPayloadHash = text;
-          renderDashboard(payload.data);
-        }
-      } catch (err) {
-        statusDot.className = 'dot offline';
-        statusText.textContent = 'Server connection lost';
-        console.error('Failed to update weather UI:', err);
+      if (e.data !== lastHash) {
+        lastHash = e.data;
+        render(payload.data);
       }
-    }
+      updateStatus();
+    };
 
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) fetchWeather();
-    });
-
-    fetchWeather();
-    setInterval(fetchWeather, POLL_MS);
+    setInterval(updateStatus, 1000);
   </script>
 </body>
 </html>

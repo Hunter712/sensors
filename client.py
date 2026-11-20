@@ -2,6 +2,7 @@ import os
 import time
 import requests
 import logging
+import atexit
 from adafruit_extended_bus import ExtendedI2C
 import adafruit_bme680
 import adafruit_bmp280
@@ -18,9 +19,41 @@ logging.basicConfig(
 
 http_session = requests.Session()
 
+BUS_CONFIG = {
+    "bme680": 11,
+    "bmp280": 12,
+    "bme280": 13,
+}
+
+I2C_BUSES = {}
+
+
+def get_i2c_bus(name):
+    if name not in I2C_BUSES:
+        bus_id = BUS_CONFIG.get(name)
+        if bus_id is None:
+            return None
+        try:
+            I2C_BUSES[name] = ExtendedI2C(bus_id)
+            logging.info(f"Opened persistent I2C bus /dev/i2c-{bus_id} for {name.upper()}")
+        except Exception as e:
+            logging.error(f"Failed to open I2C bus /dev/i2c-{bus_id} for {name.upper()}: {e}")
+            return None
+    return I2C_BUSES[name]
+
+
+def cleanup_i2c_buses():
+    for name, bus in list(I2C_BUSES.items()):
+        try:
+            bus.deinit()
+            logging.info(f"Closed I2C bus for {name.upper()}")
+        except Exception as e:
+            logging.warning(f"Error closing I2C bus for {name.upper()}: {e}")
+    I2C_BUSES.clear()
+
+atexit.register(cleanup_i2c_buses)
 
 def build_sensor_data(temp=None, press=None, hum=None, gas=None):
-    """Categorizes sensor readings for telemetry payload."""
     data = {}
 
     if temp is not None:
@@ -61,7 +94,6 @@ def build_sensor_data(temp=None, press=None, hum=None, gas=None):
 
 
 def send_data_to_server(payload):
-    """Sends collected weather metrics to central server."""
     try:
         response = http_session.post(SERVER_URL, json=payload, timeout=5.0)
         response.raise_for_status()
@@ -71,18 +103,21 @@ def send_data_to_server(payload):
 
 
 def init_single_sensor(name):
-    """Initializes a single hardware sensor by name."""
+    bus = get_i2c_bus(name)
+    if bus is None:
+        return None
+
     try:
         if name == "bme680":
-            sensor = adafruit_bme680.Adafruit_BME680_I2C(ExtendedI2C(11))
+            sensor = adafruit_bme680.Adafruit_BME680_I2C(bus)
             logging.info("BME680 initialized on bus /dev/i2c-11")
             return sensor
         if name == "bmp280":
-            sensor = adafruit_bmp280.Adafruit_BMP280_I2C(ExtendedI2C(12), address=0x76)
+            sensor = adafruit_bmp280.Adafruit_BMP280_I2C(bus, address=0x76)
             logging.info("BMP280 initialized on bus /dev/i2c-12")
             return sensor
         if name == "bme280":
-            sensor = Adafruit_BME280_I2C(ExtendedI2C(13), address=0x76)
+            sensor = Adafruit_BME280_I2C(bus, address=0x76)
             logging.info("BME280 initialized on bus /dev/i2c-13")
             return sensor
     except Exception as e:
@@ -98,12 +133,10 @@ def calculating_conditions():
         t_list, p_list, h_list = [], [], []
         latest_gas = None
 
-        # Reconnect any missing sensors
         for name, instance in sensors.items():
             if instance is None:
                 sensors[name] = init_single_sensor(name)
 
-        # Read BME680 (Ch0)
         if sensors["bme680"] is not None:
             try:
                 t = sensors["bme680"].temperature
@@ -120,7 +153,6 @@ def calculating_conditions():
                 sensors["bme680"] = None
                 logging.error(f"[BME680 - Ch0] Read Error: {e}")
 
-        # Read BMP280 (Ch1)
         if sensors["bmp280"] is not None:
             try:
                 t = sensors["bmp280"].temperature
@@ -133,7 +165,6 @@ def calculating_conditions():
                 sensors["bmp280"] = None
                 logging.error(f"[BMP280 - Ch1] Read Error: {e}")
 
-        # Read BME280 (Ch2)
         if sensors["bme280"] is not None:
             try:
                 t = sensors["bme280"].temperature
@@ -148,7 +179,6 @@ def calculating_conditions():
                 sensors["bme280"] = None
                 logging.error(f"[BME280 - Ch2] Read Error: {e}")
 
-        # Calculate average telemetry metrics
         if t_list and p_list:
             avg_t = sum(t_list) / len(t_list)
             avg_p = sum(p_list) / len(p_list)
@@ -162,4 +192,7 @@ def calculating_conditions():
 
 
 if __name__ == "__main__":
-    calculating_conditions()
+    try:
+        calculating_conditions()
+    except KeyboardInterrupt:
+        logging.info("Stopping telemetry collection (SIGINT)...")
