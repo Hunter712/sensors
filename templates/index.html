@@ -1,55 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Sensors</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;padding:30px;color:#333}
-h1{text-align:center;font-size:24px;color:#1a1a2e;margin-bottom:28px}
-.cards{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-bottom:24px}
-.card{background:#fff;border-radius:14px;padding:20px 24px;width:300px;box-shadow:0 2px 12px rgba(0,0,0,.08);text-align:center}
-.card h3{font-size:17px;font-weight:600;color:#1a1a2e;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #eef0f4;text-transform:uppercase}
-.card table{width:100%;border-collapse:collapse}
-.card td{padding:6px 0;font-size:14px;border-bottom:1px solid #f5f6f8}
-.card tr:last-child td{border-bottom:none}
-.l{color:#888;text-align:left}
-.v{font-weight:600;color:#222;text-align:right}
-.b{display:inline-block;padding:1px 10px;border-radius:10px;font-size:11px;font-weight:600;margin-left:6px;color:#fff}
-.w{text-align:center;color:#888;font-size:16px;padding:40px}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sensor Dashboard</title>
+  <style>
+    :root {
+      --bg: #f0f2f5;
+      --card-bg: #ffffff;
+      --avg-bg: #f8faff;
+      --avg-border: #3b82f6;
+      --text-main: #1a1a2e;
+      --text-value: #222222;
+      --text-muted: #7a828e;
+      --border: #eef0f4;
+      --row-border: #f5f6f8;
+      --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
 
-</style>
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121418;
+        --card-bg: #1c1f26;
+        --avg-bg: #1e2433;
+        --avg-border: #60a5fa;
+        --text-main: #f3f4f6;
+        --text-value: #e5e7eb;
+        --text-muted: #9ca3af;
+        --border: #2d323e;
+        --row-border: #252932;
+        --shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text-value);
+      padding: 24px 16px;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .status-bar {
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9ca3af;
+      display: inline-block;
+    }
+    .dot.online { background: #5cb85c; }
+    .dot.offline { background: #d9534f; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 320px));
+      gap: 20px;
+      justify-content: center;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 20px 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid transparent;
+    }
+
+    .card.avg-card {
+      background: var(--avg-bg);
+      border-color: var(--avg-border);
+    }
+
+    .card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    .card table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .card td {
+      padding: 8px 0;
+      font-size: 14px;
+      border-bottom: 1px solid var(--row-border);
+    }
+
+    .card tr:last-child td { border-bottom: none; }
+
+    .label {
+      color: var(--text-muted);
+      text-align: left;
+      text-transform: capitalize;
+    }
+
+    .value {
+      font-weight: 600;
+      color: var(--text-value);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+      color: #fff;
+      text-transform: lowercase;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 16px;
+      padding: 40px;
+    }
+  </style>
 </head>
 <body>
-<h1>Sensor Dashboard</h1>
-<div id="c" class="w">Waiting for data...</div>
+  <header>
+    <h1>Sensor Dashboard</h1>
+    <div class="status-bar">
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text">Waiting for server...</span>
+    </div>
+  </header>
 
-<script>
-const C={cold:'#5bc0de',hot:'#d9534f',normal:'#5cb85c',low:'#f0ad4e',high:'#d9534f',bad:'#d9534f',satisfactory:'#f0ad4e',good:'#5cb85c',excellent:'#5bc0de'}
-const B=t=>'<span class="b" style="background:'+(C[t]||'#888')+'">'+t+'</span>'
+  <main id="container" class="empty-state">Waiting for data...</main>
 
-setInterval(async()=>{
-  // 1. Fetch Weather Data (Unchanged behavior)
-  try {
-    const r=await fetch('/api/weather'),d=await r.json(),e=document.getElementById('c')
-    if(d.error||d.message){
-      e.className='w';e.textContent=d.error||d.message
-    }else{
-      e.className='cards'
-      let h=''
-      for(const[n,m]of Object.entries(d)){
-        h+='<div class="card"><h3>'+n+'</h3><table>'
-        for(const[k,v]of Object.entries(m)){
-          h+='<tr><td class="l">'+k+'</td><td class="v">'+(Array.isArray(v)?v[0]+' '+B(v[1]):v)+'</td></tr>'
-        }
-        h+='</table></div>'
-      }
-      e.innerHTML=h
+  <script>
+    const POLL_MS = 3000;
+
+    const BADGE_COLORS = {
+      cold: '#5bc0de',
+      hot: '#d9534f',
+      normal: '#5cb85c',
+      low: '#f0ad4e',
+      high: '#d9534f',
+      bad: '#d9534f',
+      satisfactory: '#f0ad4e',
+      good: '#5cb85c',
+      excellent: '#5bc0de'
+    };
+
+    const UNITS = {
+      temperature: '°C',
+      pressure: 'hPa',
+      humidity: '%',
+      gas: 'Ω'
+    };
+
+    const container = document.getElementById('container');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+
+    let lastPayloadHash = '';
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
-  } catch(err) {
-    console.error("Failed to update weather UI:", err);
-  }
-},1000)
-</script>
+
+    function formatValue(key, rawValue) {
+      if (key === 'gas' && typeof rawValue === 'number') {
+        return rawValue >= 1000 ? `${(rawValue / 1000).toFixed(1)} kΩ` : `${rawValue} Ω`;
+      }
+      const unit = UNITS[key] ? ` ${UNITS[key]}` : '';
+      return `${escapeHtml(rawValue)}${unit}`;
+    }
+
+    function renderBadge(status) {
+      const color = BADGE_COLORS[status] || '#888';
+      return `<span class="badge" style="background:${color}">${escapeHtml(status)}</span>`;
+    }
+
+    function renderDashboard(sensorData) {
+      if (!sensorData || sensorData.error || sensorData.message) {
+        container.className = 'empty-state';
+        container.textContent = (sensorData && (sensorData.error || sensorData.message)) || 'Waiting for data...';
+        return;
+      }
+
+      const entries = Object.entries(sensorData).sort(([a], [b]) => {
+        if (a === 'AVG') return -1;
+        if (b === 'AVG') return 1;
+        return 0;
+      });
+
+      container.className = 'cards';
+      container.innerHTML = entries.map(([sensorName, metrics]) => {
+        const isAvg = sensorName.toUpperCase() === 'AVG';
+        const rows = Object.entries(metrics).map(([key, val]) => {
+          const formatted = Array.isArray(val)
+            ? `${formatValue(key, val[0])} ${renderBadge(val[1])}`
+            : escapeHtml(val);
+
+          return `
+            <tr>
+              <td class="label">${escapeHtml(key)}</td>
+              <td class="value">${formatted}</td>
+            </tr>
+          `;
+        }).join('');
+
+        return `
+          <section class="card ${isAvg ? 'avg-card' : ''}">
+            <h3>${escapeHtml(sensorName)}</h3>
+            <table>${rows}</table>
+          </section>
+        `;
+      }).join('');
+    }
+
+    async function fetchWeather() {
+      if (document.hidden) return;
+
+      try {
+        const response = await fetch('/api/weather', { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const text = await response.text();
+        const payload = JSON.parse(text);
+
+        if (payload.updated_at) {
+          statusDot.className = 'dot online';
+          statusText.textContent = `Updated: ${payload.updated_at}`;
+        } else {
+          statusDot.className = 'dot';
+          statusText.textContent = 'No telemetry received yet';
+        }
+
+        if (text !== lastPayloadHash) {
+          lastPayloadHash = text;
+          renderDashboard(payload.data);
+        }
+      } catch (err) {
+        statusDot.className = 'dot offline';
+        statusText.textContent = 'Server connection lost';
+        console.error('Failed to update weather UI:', err);
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) fetchWeather();
+    });
+
+    fetchWeather();
+    setInterval(fetchWeather, POLL_MS);
+  </script>
 </body>
 </html>
