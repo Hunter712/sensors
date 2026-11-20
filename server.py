@@ -1,19 +1,21 @@
-import pathlib
-from fastapi import FastAPI, Request
+from pathlib import Path
+from typing import Any
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
+BASE_DIR = Path(__file__).resolve().parent
+INDEX_HTML = (BASE_DIR / "templates" / "index.html").read_text(encoding="utf-8")
+
 # In-memory storage for weather status
-latest_status = {"message": "Waiting for data from sensor..."}
+latest_status: dict[str, Any] = {"message": "Waiting for data from sensor..."}
+
 
 @app.post("/api/weather")
-async def receive_weather_data(request: Request):
+async def receive_weather_data(payload: dict[str, Any]):
     global latest_status
-    try:
-        latest_status = await request.json()
-    except Exception as e:
-        latest_status = {"error": f"Invalid JSON: {e}"}
+    latest_status = payload
     return {"status": "success"}
 
 
@@ -21,7 +23,7 @@ async def receive_weather_data(request: Request):
 async def get_weather_data():
     return latest_status
 
+
 @app.get("/", response_class=HTMLResponse)
 async def get_weather_page():
-    html = pathlib.Path("templates/index.html").read_text(encoding="utf-8")
-    return HTMLResponse(content=html)
+    return HTMLResponse(content=INDEX_HTML)
