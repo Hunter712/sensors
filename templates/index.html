@@ -18,29 +18,11 @@ h1{text-align:center;font-size:24px;color:#1a1a2e;margin-bottom:28px}
 .b{display:inline-block;padding:1px 10px;border-radius:10px;font-size:11px;font-weight:600;margin-left:6px;color:#fff}
 .w{text-align:center;color:#888;font-size:16px;padding:40px}
 
-/* Lightning Log Styles */
-.lightning-container{max-width:940px;margin:0 auto;background:#fff;border-radius:14px;padding:20px 24px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
-.lightning-header{font-size:16px;font-weight:600;color:#1a1a2e;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #eef0f4;display:flex;justify-content:space-between;align-items:center}
-.lightning-table{width:100%;border-collapse:collapse}
-.lightning-table th, .lightning-table td{padding:10px 12px;text-align:left;border-bottom:1px solid #f0f2f5;font-size:14px}
-.lightning-table th{background:#f8f9fa;color:#1a1a2e;font-size:12px;text-transform:uppercase}
-.lightning-badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700;color:#fff;background:#d9534f}
-.empty-log{text-align:center;color:#888;padding:20px;font-size:14px}
 </style>
 </head>
 <body>
 <h1>Sensor Dashboard</h1>
 <div id="c" class="w">Waiting for data...</div>
-
-<div class="lightning-container">
-  <div class="lightning-header">
-    <span>Lightning Strike Event History</span>
-    <span id="strike-count" style="font-size: 13px; color: #888;">Events logged: 0</span>
-  </div>
-  <div id="lightning-logs">
-    <div class="empty-log">Waiting for lightning data...</div>
-  </div>
-</div>
 
 <script>
 const C={cold:'#5bc0de',hot:'#d9534f',normal:'#5cb85c',low:'#f0ad4e',high:'#d9534f',bad:'#d9534f',satisfactory:'#f0ad4e',good:'#5cb85c',excellent:'#5bc0de'}
@@ -66,59 +48,6 @@ setInterval(async()=>{
     }
   } catch(err) {
     console.error("Failed to update weather UI:", err);
-  }
-
-  // 2. Fetch All Recorded Lightning Events from File
-  try {
-    const rl=await fetch('/api/lightning'), events=await rl.json()
-    const logElem=document.getElementById('lightning-logs')
-    const countElem=document.getElementById('strike-count')
-
-    if(events.error){
-      logElem.innerHTML='<div class="empty-log">Lightning sensor error: '+events.error+'</div>'
-    } else if(Array.isArray(events) && events.length > 0){
-      countElem.textContent = 'Events logged: ' + events.length
-
-      let tableHtml = `
-        <table class="lightning-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Type</th>
-              <th>Distance</th>
-              <th>Energy</th>
-              <th>Timestamp</th>
-            </tr>
-          </thead>
-          <tbody>
-      `
-
-      // Render items with the most recent strike appearing first
-      const reversedEvents = [...events].reverse()
-
-      reversedEvents.forEach((item, index) => {
-        const recordIndex = events.length - index
-        const timeStr = item.timestamp ? new Date(item.timestamp * 1000).toLocaleString() : 'N/A'
-
-        tableHtml += `
-          <tr>
-            <td><strong>${recordIndex}</strong></td>
-            <td><span class="lightning-badge">${item.event_type || 'lightning'}</span></td>
-            <td><strong>${item.distance_km ?? 'N/A'} km</strong></td>
-            <td>${item.energy ?? 'N/A'}</td>
-            <td>${timeStr}</td>
-          </tr>
-        `
-      })
-
-      tableHtml += '</tbody></table>'
-      logElem.innerHTML = tableHtml
-    } else {
-      countElem.textContent = 'Events logged: 0'
-      logElem.innerHTML = '<div class="empty-log">No lightning events recorded in file yet.</div>'
-    }
-  } catch(err) {
-    console.error("Failed to update lightning UI:", err);
   }
 },1000)
 </script>
