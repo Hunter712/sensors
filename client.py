@@ -7,6 +7,8 @@ from adafruit_extended_bus import ExtendedI2C
 import adafruit_bme680
 import adafruit_bmp280
 from adafruit_bme280.advanced import Adafruit_BME280_I2C
+import adafruit_ads1x15.ads1115 as ADS
+from adafruit_ads1x15.analog_in import AnalogIn
 
 POLL_INTERVAL = float(os.getenv("POLL_INTERVAL", "20.0"))
 SERVER_URL = os.getenv("SERVER_URL", "http://192.168.31.96:8000/api/weather")
@@ -23,6 +25,7 @@ BUS_CONFIG = {
     "bme680": 11,
     "bmp280": 12,
     "bme280": 13,
+    "mics5524": 14,
 }
 
 I2C_BUSES = {}
@@ -120,13 +123,18 @@ def init_single_sensor(name):
             sensor = Adafruit_BME280_I2C(bus, address=0x76)
             logging.info("BME280 initialized on bus /dev/i2c-13")
             return sensor
+        if name == "mics5524":
+            ads = ADS.ADS1115(bus, address=0x48)
+            sensor = AnalogIn(ads, 0)
+            logging.info("MICS-5524 (via ADS1115) initialized on bus /dev/i2c-14")
+            return sensor
     except Exception as e:
         logging.error(f"Failed to initialize {name.upper()}: {e}")
     return None
 
 
 def calculating_conditions():
-    sensors = {name: init_single_sensor(name) for name in ("bme680", "bmp280", "bme280")}
+    sensors = {name: init_single_sensor(name) for name in ("bme680", "bmp280", "bme280", "mics5524")}
 
     while True:
         sensors_data = {}
@@ -178,6 +186,23 @@ def calculating_conditions():
                 sensors_data["bme280"] = {"error": str(e)}
                 sensors["bme280"] = None
                 logging.error(f"[BME280 - Ch2] Read Error: {e}")
+
+        if sensors.get("mics5524") is not None:
+            try:
+                v = round(sensors["mics5524"].voltage, 3)
+                if v < 0.35:
+                    status = "excellent"
+                elif v < 0.70:
+                    status = "good"
+                elif v < 1.20:
+                    status = "satisfactory"
+                else:
+                    status = "bad"
+                sensors_data["mics5524"] = {"voltage": [v, status]}
+            except Exception as e:
+                sensors_data["mics5524"] = {"error": str(e)}
+                sensors["mics5524"] = None
+                logging.error(f"[MICS-5524 - Ch3] Read Error: {e}")
 
         if t_list and p_list:
             avg_t = sum(t_list) / len(t_list)
