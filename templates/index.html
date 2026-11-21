@@ -79,7 +79,16 @@
       if (!current || !current.updated_at) return setStatus('', 'Waiting for telemetry...');
 
       const secAgo = Math.round(current.baseSecAgo + (Date.now() - current.receivedAt) / 1000);
-      const timeStr = new Date(current.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const timeStr = new Date(current.updated_at).toLocaleString('uk-UA', {
+        timeZone: 'Europe/Kyiv',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
       const ago = relTime(secAgo);
 
       if (secAgo <= 35) setStatus('online', `Online • ${timeStr} (${ago})`);
